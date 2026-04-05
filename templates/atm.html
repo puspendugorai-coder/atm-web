@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global Digital ATM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+    }
+
+    .atm-shell {
+      background: linear-gradient(160deg, #2c3e50, #1a252f);
+      border-radius: 24px;
+      padding: 30px;
+      width: 460px;
+      box-shadow:
+        0 0 0 4px #34495e,
+        0 0 0 7px #2c3e50,
+        0 30px 80px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .atm-title {
+      text-align: center;
+      color: #1abc9c;
+      font-size: 20px;
+      letter-spacing: 4px;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #1abc9c33;
+      margin-bottom: 20px;
+      text-shadow: 0 0 12px #1abc9c88;
+    }
+
+    .atm-screen {
+      background: #0d1f0d;
+      border-radius: 12px;
+      border: 3px solid #1abc9c44;
+      padding: 28px 24px;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 0 20px #1abc9c22;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .atm-screen::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+    }
+
+    .screen-icon { font-size: 42px; margin-bottom: 12px; }
+
+    .screen-title {
+      color: #1abc9c;
+      font-size: 15px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px #1abc9c;
+    }
+
+    .screen-sub {
+      color: #7f8c8d;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .flash {
+      width: 100%;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 14px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .flash.error   { background: #2c0a0a; color: #e74c3c; border: 1px solid #e74c3c44; }
+    .flash.success { background: #0a2c0a; color: #2ecc71; border: 1px solid #2ecc7144; }
+
+    .atm-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 2px solid #1abc9c55;
+      border-radius: 8px;
+      color: #1abc9c;
+      font-family: 'Courier New', monospace;
+      font-size: 22px;
+      text-align: center;
+      padding: 12px;
+      outline: none;
+      letter-spacing: 4px;
+      margin-bottom: 6px;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    .atm-input:focus {
+      border-color: #1abc9c;
+      box-shadow: 0 0 12px #1abc9c44;
+    }
+    .atm-input::placeholder { color: #2c5a4e; letter-spacing: 2px; font-size: 14px; }
+
+    /* Keyboard hint below input */
+    .key-hint {
+      color: #2c5a4e;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .atm-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 10px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .atm-btn:active { transform: scale(0.96); }
+    .atm-btn:hover  { opacity: 0.88; }
+
+    .btn-green  { background: #27ae60; color: white; box-shadow: 0 4px 14px #27ae6044; }
+    .btn-blue   { background: #2980b9; color: white; box-shadow: 0 4px 14px #2980b944; }
+    .btn-red    { background: #c0392b; color: white; box-shadow: 0 4px 14px #c0392b44; }
+
+    /* ── MENU GRID ── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .menu-btn {
+      padding: 16px 10px 12px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.15s;
+      position: relative;
+    }
+    .menu-btn:hover  { transform: translateY(-3px); }
+    .menu-btn:active { transform: scale(0.96); opacity: 0.7; }
+    .menu-btn .icon  { font-size: 26px; }
+
+    /* Key badge on each menu button */
+    .menu-btn .key-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      margin-top: 2px;
+      font-family: 'Courier New', monospace;
+      opacity: 0.85;
+    }
+
+    /* Global keyboard shortcut bar shown on menu */
+    .keyboard-bar {
+      width: 100%;
+      margin-top: 14px;
+      background: rgba(26,188,156,0.06);
+      border: 1px solid #1abc9c22;
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .keyboard-bar span {
+      color: #2c5a4e;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .keyboard-bar kbd {
+      display: inline-block;
+      background: #0a2a20;
+      border: 1px solid #1abc9c44;
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: #1abc9c;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      margin-right: 3px;
+    }
+
+    .amount-display {
+      background: #050f05;
+      border: 1px solid #1abc9c33;
+      border-radius: 10px;
+      padding: 20px 30px;
+      text-align: center;
+      margin: 16px 0;
+      width: 100%;
+    }
+    .amount-display .label { color: #7f8c8d; font-size: 11px; letter-spacing: 2px; margin-bottom: 6px; }
+    .amount-display .value { color: #f1c40f; font-size: 32px; font-weight: bold; text-shadow: 0 0 10px #f1c40f88; }
+
+    .lock-timer {
+      color: #e74c3c;
+      font-size: 42px;
+      font-weight: bold;
+      text-shadow: 0 0 16px #e74c3c;
+      margin: 10px 0;
+    }
+
+    .atm-footer {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 10px;
+      letter-spacing: 2px;
+      margin-top: 16px;
+      text-transform: uppercase;
+    }
+
+    .success-badge {
+      background: #0a2c0a;
+      border: 1px solid #2ecc7144;
+      border-radius: 10px;
+      padding: 16px 24px;
+      text-align: center;
+      width: 100%;
+      margin: 12px 0;
+    }
+    .success-badge .s-label { color: #7f8c8d; font-size: 11px; letter-spacing: 2px; }
+    .success-badge .s-value { color: #2ecc71; font-size: 22px; font-weight: bold; margin-top: 4px; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .blink { animation: blink 1.2s infinite; }
+
+    /* Active key press glow on menu button */
+    .menu-btn.key-pressed {
+      transform: scale(0.94) !important;
+      opacity: 0.65 !important;
+      box-shadow: 0 0 18px rgba(255,255,255,0.15) !important;
+    }
+  </style>
+</head>
+<body>
+<div class="atm-shell">
+
+  <div class="atm-title">🏧 Global Digital ATM</div>
+
+  <div class="atm-screen">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: CARD ENTRY                      #}
+    {# ══════════════════════════════════════ #}
+    {% if step == "card" %}
+      <div class="screen-icon">💳</div>
+      <div class="screen-title">Insert Your Card</div>
+      <div class="screen-sub">Enter your 12-digit card number</div>
+
+      <form method="POST" action="/" style="width:100%;" id="cardForm">
+        <input class="atm-input" type="text" name="card_no"
+               id="cardInput"
+               placeholder="XXXXXXXXXXXX"
+               maxlength="12" inputmode="numeric"
+               autofocus required />
+        <div class="key-hint">⏎ Press ENTER to proceed</div>
+        <div class="btn-row">
+          <button type="submit" class="atm-btn btn-green">▶ PROCEED &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ENTER</kbd></button>
+        </div>
+      </form>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: MENU                            #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "menu" %}
+      <div class="screen-icon">👋</div>
+      <div class="screen-title">Welcome, {{ user_name }}</div>
+      <div class="screen-sub">Select a transaction</div>
+
+      <div class="menu-grid" id="menuGrid">
+
+        <a href="/pin/WITHDRAW" class="menu-btn" id="btnW"
+           style="background:#1a0a40; color:#a29bfe;">
+          <span class="icon">💸</span>
+          WITHDRAW
+          <span class="key-badge">W</span>
+        </a>
+
+        <a href="/pin/DEPOSIT" class="menu-btn" id="btnD"
+           style="background:#200a30; color:#fd79a8;">
+          <span class="icon">💰</span>
+          DEPOSIT
+          <span class="key-badge">D</span>
+        </a>
+
+        <a href="/pin/BALANCE" class="menu-btn" id="btnB"
+           style="background:#0a2a0a; color:#55efc4;">
+          <span class="icon">📊</span>
+          BALANCE
+          <span class="key-badge">B</span>
+        </a>
+
+        <a href="/reset" class="menu-btn" id="btnE"
+           style="background:#2a0a0a; color:#ff7675;">
+          <span class="icon">🚪</span>
+          EXIT
+          <span class="key-badge">E</span>
+        </a>
+
+      </div>
+
+      <!-- Keyboard shortcut reference bar -->
+      <div class="keyboard-bar">
+        <span><kbd>W</kbd> Withdraw</span>
+        <span><kbd>D</kbd> Deposit</span>
+        <span><kbd>B</kbd> Balance</span>
+        <span><kbd>E</kbd> Exit</span>
+      </div>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: PIN ENTRY                       #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "pin" %}
+      <div class="screen-icon">🔐</div>
+      <div class="screen-title">{{ mode }} — Enter PIN</div>
+      <div class="screen-sub">Enter your 4-digit secret PIN</div>
+
+      <form method="POST" action="/pin/{{ mode }}" style="width:100%;" id="pinForm">
+        <input class="atm-input" type="password" name="pin"
+               id="pinInput"
+               placeholder="••••"
+               maxlength="4" inputmode="numeric"
+               autofocus required />
+        <div class="key-hint">⏎ ENTER to confirm &nbsp;·&nbsp; ESC to go back</div>
+        <div class="btn-row">
+          <a href="/menu" class="atm-btn btn-red">✕ BACK &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ESC</kbd></a>
+          <button type="submit" class="atm-btn btn-green">✔ CONFIRM &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ENTER</kbd></button>
+        </div>
+      </form>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: AMOUNT ENTRY                    #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "amount" %}
+      <div class="screen-icon">{% if mode == 'WITHDRAW' %}💸{% else %}💰{% endif %}</div>
+      <div class="screen-title">{{ mode }}</div>
+      <div class="screen-sub">Current Balance</div>
+
+      <div class="amount-display">
+        <div class="label">AVAILABLE BALANCE</div>
+        <div class="value">₹{{ balance }}</div>
+      </div>
+
+      <form method="POST" action="/amount" style="width:100%;" id="amtForm">
+        <input class="atm-input" type="number" name="amount"
+               id="amtInput"
+               placeholder="Enter amount"
+               min="1" autofocus required />
+        <div class="key-hint">⏎ ENTER to process &nbsp;·&nbsp; ESC to cancel</div>
+        <div class="btn-row">
+          <a href="/menu" class="atm-btn btn-red">✕ CANCEL &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ESC</kbd></a>
+          <button type="submit" class="atm-btn btn-green">▶ PROCESS &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ENTER</kbd></button>
+        </div>
+      </form>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: BALANCE                         #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "balance" %}
+      <div class="screen-icon">📊</div>
+      <div class="screen-title">Account Balance</div>
+
+      <div class="amount-display">
+        <div class="label">YOUR CURRENT BALANCE</div>
+        <div class="value">₹{{ balance }}</div>
+      </div>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <a href="/menu" class="atm-btn btn-blue" id="backToMenu">
+          ← BACK TO MENU &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">ESC</kbd>
+        </a>
+      </div>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: RESULT                          #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "result" %}
+      <div class="screen-icon">✅</div>
+      <div class="screen-title">Transaction Successful</div>
+
+      <div class="success-badge">
+        <div class="s-label">{{ mode }} AMOUNT</div>
+        <div class="s-value">₹{{ amount }}</div>
+      </div>
+      <div class="amount-display">
+        <div class="label">NEW BALANCE</div>
+        <div class="value">₹{{ new_balance }}</div>
+      </div>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <a href="/menu"  class="atm-btn btn-blue" id="resultMenu">
+          ← MENU &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">M</kbd>
+        </a>
+        <a href="/reset" class="atm-btn btn-red" id="resultExit">
+          🚪 EXIT &nbsp;<kbd style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:3px;padding:1px 5px;font-size:11px;">E</kbd>
+        </a>
+      </div>
+
+
+    {# ══════════════════════════════════════ #}
+    {# STEP: LOCKED                          #}
+    {# ══════════════════════════════════════ #}
+    {% elif step == "locked" %}
+      <div class="screen-icon">🔒</div>
+      <div class="screen-title blink">Security Lockout</div>
+      <div class="screen-sub">Too many wrong PIN attempts</div>
+
+      <div class="lock-timer" id="countdown">{{ remaining }}</div>
+      <div class="screen-sub">seconds remaining</div>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <a href="/locked" class="atm-btn btn-red" id="refreshBtn" style="display:none;">
+          🔓 UNLOCK NOW
+        </a>
+      </div>
+
+    {% endif %}
+
+  </div>{# end .atm-screen #}
+
+  <div class="atm-footer">Secure ATM System &nbsp;|&nbsp; 24/7 Service</div>
+
+</div>{# end .atm-shell #}
+
+
+{# ══════════════════════════════════════════════════════════════ #}
+{# KEYBOARD SHORTCUTS — placed here OUTSIDE all {% if %} blocks  #}
+{# so it ALWAYS loads on every screen                            #}
+{# ══════════════════════════════════════════════════════════════ #}
+<script>
+document.addEventListener('keydown', function(e) {
+  var key = e.key.toLowerCase();
+
+  // ── CARD ENTRY: Enter = submit ───────────────────────────
+  var cardForm = document.getElementById('cardForm');
+  if (cardForm) {
+    if (e.key === 'Enter') { cardForm.submit(); }
+    return;
+  }
+
+  // ── PIN ENTRY: Enter = submit, Esc = back to menu ────────
+  var pinForm = document.getElementById('pinForm');
+  if (pinForm) {
+    if (e.key === 'Enter') { e.preventDefault(); pinForm.submit(); }
+    if (e.key === 'Escape') { window.location.href = '/menu'; }
+    return;
+  }
+
+  // ── AMOUNT ENTRY: Enter = submit, Esc = cancel ───────────
+  var amtForm = document.getElementById('amtForm');
+  if (amtForm) {
+    if (e.key === 'Enter') { e.preventDefault(); amtForm.submit(); }
+    if (e.key === 'Escape') { window.location.href = '/menu'; }
+    return;
+  }
+
+  // ── MENU: W / D / B / E ──────────────────────────────────
+  var menuGrid = document.getElementById('menuGrid');
+  if (menuGrid) {
+    if      (key === 'w') { pressAndGo('btnW', '/pin/WITHDRAW'); }
+    else if (key === 'd') { pressAndGo('btnD', '/pin/DEPOSIT');  }
+    else if (key === 'b') { pressAndGo('btnB', '/pin/BALANCE');  }
+    else if (key === 'e' || e.key === 'Escape') { pressAndGo('btnE', '/reset'); }
+    return;
+  }
+
+  // ── BALANCE SCREEN: Esc = back to menu ───────────────────
+  var backBtn = document.getElementById('backToMenu');
+  if (backBtn) {
+    if (e.key === 'Escape' || key === 'b') { window.location.href = '/menu'; }
+    return;
+  }
+
+  // ── RESULT SCREEN: M = menu, E = exit ────────────────────
+  var resultMenu = document.getElementById('resultMenu');
+  if (resultMenu) {
+    if (key === 'm' || e.key === 'Escape') { window.location.href = '/menu';  }
+    if (key === 'e') { window.location.href = '/reset'; }
+    return;
+  }
+});
+
+
+// ── ANIMATE MENU BUTTON THEN NAVIGATE ─────────────────────────
+function pressAndGo(btnId, url) {
+  var btn = document.getElementById(btnId);
+  if (btn) {
+    btn.classList.add('key-pressed');
+    setTimeout(function() { window.location.href = url; }, 180);
+  } else {
+    window.location.href = url;
+  }
+}
+
+
+// ── LOCKOUT COUNTDOWN (only runs if countdown element exists) ──
+window.addEventListener('DOMContentLoaded', function() {
+  var el  = document.getElementById('countdown');
+  var btn = document.getElementById('refreshBtn');
+  if (el) {
+    var secs = parseInt(el.textContent, 10);
+    var timer = setInterval(function() {
+      secs--;
+      if (secs <= 0) {
+        clearInterval(timer);
+        el.textContent = '0';
+        if (btn) btn.style.display = 'block';
+      } else {
+        el.textContent = secs;
+      }
+    }, 1000);
+  }
+});
+</script>
+
+</body>
+</html>
