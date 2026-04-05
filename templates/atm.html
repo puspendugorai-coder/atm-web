@@ -381,7 +381,19 @@
     {# ══════════════════════════════════════ #}
     {% elif step == "pin" %}
       <div class="screen-icon">🔐</div>
-      <div class="screen-title">{{ mode }} — Enter PIN</div>
+      <div class="screen-title">{{ mode }}</div>
+      <div style="
+        background: #0a2a1a;
+        border: 1px solid #1abc9c44;
+        border-radius: 8px;
+        padding: 10px 20px;
+        margin-bottom: 14px;
+        text-align: center;
+        width: 100%;
+      ">
+        <div style="color:#7f8c8d; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">WELCOME</div>
+        <div style="color:#1abc9c; font-size:16px; font-weight:bold; letter-spacing:2px; text-transform:uppercase;">👤 {{ user_name }}</div>
+      </div>
       <div class="screen-sub">Enter your 4-digit secret PIN</div>
 
       <form method="POST" action="/pin/{{ mode }}" style="width:100%;" id="pinForm">
