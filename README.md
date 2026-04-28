@@ -5,8 +5,10 @@
 ![Supabase](https://img.shields.io/badge/Database-Supabase-green)
 ![Status](https://img.shields.io/badge/Status-Live-brightgreen)
 
+**👉Note:-**
+*It is connected with the bank_management_web application another repository in my github profile... after registering in the bank u can use the atm app by giving ur card number and pin number which will be registered in the bank_app.. otherwise it will pop-up an error that ur card is not registered in the bank..*
 ## 🔗 Live Demo
-## 👉 [Click Here to Open the ATM](https://alphacoder7206-atm-web.hf.space)
+## 👉 [Click Here to Open the ATM](https://alphacoder7206-atm-web.hf.space) *(read the note section carefully before proceeding!)*
 
 ---
 
