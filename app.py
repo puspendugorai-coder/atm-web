@@ -1,14 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from supabase import create_client, Client
 import os, time
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "atm_secret_key_change_this"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "atm_secret_key_change_this")
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://bryhzndcduqvfnjhgeub.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyeWh6bmRjZHVxdmZuamhnZXViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTI4NjY2NSwiZXhwIjoyMDkwODYyNjY1fQ.Vg2c_mQTAQzBH9dsMdOh8WtetBuGKtQY4dnDolipma0")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("Missing Supabase configuration keys! Double-check your environment setup.")
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 LOCK_DURATION = 60  # seconds
 
 
